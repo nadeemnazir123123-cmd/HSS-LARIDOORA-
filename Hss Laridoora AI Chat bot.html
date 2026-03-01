@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSS Laridoora Assistant</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, sans-serif; margin: 0; padding: 0; }
+        body { background: #1e4b2b; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; }
+        .chat { width: 100%; max-width: 400px; background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 2px solid #ff9933; }
+        .header { background: #1e4b2b; color: white; padding: 16px 20px; text-align: center; border-bottom: 2px solid #ff9933; }
+        .logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
+        .logo-icon { background: #ff9933; color: #1e4b2b; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; border: 2px solid white; }
+        .logo-text { text-align: left; }
+        .logo-text h2 { font-size: 20px; margin-bottom: 2px; }
+        .logo-text p { font-size: 12px; opacity: 0.9; }
+        .header small { display: block; margin-top: 8px; font-size: 11px; color: #ffeb99; border-top: 1px dashed #ffeb99; padding-top: 6px; }
+        .messages { height: 340px; overflow-y: auto; padding: 16px; background: #f5f7fa; }
+        .msg { margin-bottom: 16px; display: flex; flex-direction: column; }
+        .user { align-items: flex-end; }
+        .bot { align-items: flex-start; }
+        .bubble { max-width: 80%; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; white-space: pre-line; }
+        .user .bubble { background: #1e4b2b; color: white; border-bottom-right-radius: 4px; }
+        .bot .bubble { background: white; color: #1e4b2b; border: 1px solid #ddd; border-bottom-left-radius: 4px; }
+        .time { font-size: 10px; color: #888; margin: 4px 8px 0; }
+        .quick { padding: 12px; display: flex; flex-wrap: wrap; gap: 6px; background: white; border-top: 1px solid #eee; }
+        .quick-btn { background: #f0f3f8; border: 1px solid #ff9933; border-radius: 30px; padding: 8px 14px; font-size: 12px; color: #1e4b2b; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .quick-btn:hover { background: #1e4b2b; color: white; }
+        .input-area { display: flex; padding: 12px; background: white; border-top: 1px solid #ddd; }
+        .input-area input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 30px; outline: none; }
+        .input-area button { background: #1e4b2b; color: white; border: none; border-radius: 50%; width: 44px; height: 44px; margin-left: 8px; cursor: pointer; font-size: 18px; }
+    </style>
+</head>
+<body>
+<div class="chat">
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon">HSSL</div>
+            <div class="logo-text">
+                <h2>🏫 HSS Laridoora</h2>
+                <p>Baramulla | Est. 1954</p>
+            </div>
+        </div>
+        <small>Designed by Er. Waseem Ahmad Lone (Vocational Trainer)</small>
+    </div>
+    <div class="messages" id="messages">
+        <div class="msg bot">
+            <div class="bubble">🌸 Assalam-o-Alaikum! Ask me about timings, admissions, fees, subjects, documents, or contact.</div>
+            <div class="time">Just now</div>
+        </div>
+    </div>
+    <div class="quick" id="quick">
+        <button class="quick-btn" onclick="sendQuick('timings')">⏰ Timings</button>
+        <button class="quick-btn" onclick="sendQuick('admissions 2026')">📋 Admissions</button>
+        <button class="quick-btn" onclick="sendQuick('fee structure')">💰 Fees</button>
+        <button class="quick-btn" onclick="sendQuick('class 9 subjects')">📚 Class 9-10</button>
+        <button class="quick-btn" onclick="sendQuick('science stream')">🔬 Science</button>
+        <button class="quick-btn" onclick="sendQuick('arts stream')">🎨 Arts</button>
+        <button class="quick-btn" onclick="sendQuick('documents required')">📄 Documents</button>
+        <button class="quick-btn" onclick="sendQuick('contact')">📞 Contact</button>
+    </div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Type your question..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()">➤</button>
+    </div>
+</div>
+
+<script>
+    const messages = document.getElementById('messages');
+    const userInput = document.getElementById('userInput');
+
+    const knowledge = {
+        timings: "⏰ HSS LARIDOORA TIMINGS\n• School: 10:30 AM – 3:30 PM (Mon-Sat)\n• Office: 10:00 AM – 3:30 PM\n• Winter same (Dec-Feb)",
+        "admissions 2026": "📋 ADMISSIONS 2025-26 (last date March 10, 2026)\nClasses: 9th, 10th, 11th, 12th (Science/Arts/Vocational).\nEligibility: Passed previous class (JKBOSE).\nDocuments: marksheet, character, 4 photos, Aadhar, bank passbook, ration card, father's Aadhar.",
+        "fee structure": "💰 ANNUAL FEE\n• 9th: Boys ₹1540, Girls ₹1500\n• 10th: Boys ₹870, Girls ₹830\n• 11th/12th: Boys ₹1660, Girls ₹1600\nPay at J&K Bank or school office.",
+        "class 9 subjects": "📚 CLASS 9th  & 10th SUBJECTS\nEnglish, Urdu, Social Science, Maths, Science, Kashmiri, Vocational (Telecommunication – Optical Fiber Splicer).\n Fees: 9th (Boys 1540/Girls 1500), 10th (Boys 870/Girls 830).",
+        "science stream": "🔬 SCIENCE (11-12)\nPhysics, Chemistry, Biology/Maths, English, EVS/PE, Vocational (Telecommunication)..",
+        "arts stream": "🎨 ARTS (11-12)\nEnglish, Political Science, Education, EVS/PE, Urdu, Economics. Fee: Boys = 1660 & Girls =1600.",
+        "documents required": "📄 REQUIRED DOCUMENTS\n• Previous marksheet\n• Character certificate\n• 4 passport photos\n• Aadhar card (student)\n• Bank passbook copy\n• Ration card copy\n• Father's Aadhaar copy",
+        contact: "📞 CONTACT\nPhone: +91 7051566624\nEmail: Principalhsslaridoora@gmail.com\nAddress: Laridoora, Baramulla, J&K - 193101",
+        vocational: "🛠️ VOCATIONAL TRADE: Telecommunication (Optical Fiber Splicer). Trainer: Er. Waseem Ahmad Lone. Available classes 9-12.",
+        default: "🌸 I'm not sure. Try: timings, admissions, fees, subjects, documents, contact, or click buttons."
+    };
+
+    function addMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `msg ${sender}`;
+        msgDiv.innerHTML = `<div class="bubble">${text}</div><div class="time">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
+        messages.appendChild(msgDiv);
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    function getResponse(query) {
+        query = query.toLowerCase();
+        if (query.includes('salam') || query.includes('hello') || query.includes('hi')) return "🌸 Walikum Assalam! How can I help?";
+        if (query.includes('thank')) return "😊 You're welcome!";
+        if (query.includes('bye')) return "🌸 Khuda Hafiz!";
+        if (query.includes('timing') || query.includes('time') || query.includes('hour')) return knowledge.timings;
+        if (query.includes('admission') || query.includes('apply')) return knowledge["admissions 2026"];
+        if (query.includes('fee') || query.includes('cost') || query.includes('price')) return knowledge["fee structure"];
+        if (query.includes('9th') || query.includes('10th') || query.includes('class 9') || query.includes('class 10')) return knowledge["class 9 subjects"];
+        if (query.includes('science')) return knowledge["science stream"];
+        if (query.includes('arts')) return knowledge["arts stream"];
+        if (query.includes('document') || query.includes('require')) return knowledge["documents required"];
+        if (query.includes('contact') || query.includes('phone') || query.includes('email')) return knowledge.contact;
+        if (query.includes('vocational') || query.includes('waseem') || query.includes('trainer')) return knowledge.vocational;
+        return knowledge.default;
+    }
+
+    function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+        addMessage(text, 'user');
+        userInput.value = '';
+        setTimeout(() => {
+            const reply = getResponse(text);
+            addMessage(reply, 'bot');
+        }, 500);
+    }
+
+    function sendQuick(topic) {
+        userInput.value = topic;
+        sendMessage();
+    }
+</script>
+</body>
+</html>
